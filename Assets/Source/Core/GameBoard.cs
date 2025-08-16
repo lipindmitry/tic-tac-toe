@@ -17,7 +17,7 @@ public class GameBoard : IGameBoard
 
     public GameBoard(GameBoardSettings gameBoardSettings)
     {
-        if (gameBoardSettings.Size <= MIN_BOARD_SIZE)
+        if (gameBoardSettings.Size < MIN_BOARD_SIZE)
             throw new ArgumentOutOfRangeException(nameof(gameBoardSettings.Size));
 
         _size = gameBoardSettings.Size;
@@ -34,7 +34,12 @@ public class GameBoard : IGameBoard
     public bool IsEmpty(int row, int column)
     {
         BoardCell cell = GetCell(row, column);
-        return cell.ContentType == CellContentType.Empty;
+        return cell.ContentType.Value == CellContentType.Empty;
+    }
+
+    public bool HasEmpty()
+    {
+        return _cells.Any(x => x.ContentType.Value == CellContentType.Empty);
     }
 
     public void SetContent(int row, int column, CellContentType content)
@@ -44,31 +49,36 @@ public class GameBoard : IGameBoard
         _lastMove.Value = cell;
     }
 
+    public void Clear()
+    {
+        foreach (var cell in _cells)
+            cell.Clear();
+    }
+
     public bool IsFullLine(out CellContentType cellContentType)
     {
         for (int i = 0; i < _size; i++)
         {
             if (CheckLine(i, 0, 0, 1))
             {
-                cellContentType = GetCell(i, 0).ContentType;
+                cellContentType = GetCell(i, 0).ContentType.Value;
                 return true;
             }
-
             if (CheckLine(0, i, 1, 0))
             {
-                cellContentType = GetCell(0, i).ContentType;
+                cellContentType = GetCell(0, i).ContentType.Value;
                 return true;
             }
         }
 
         if (CheckLine(0, 0, 1, 1))
         {
-            cellContentType = GetCell(0, 0).ContentType;
+            cellContentType = GetCell(0, 0).ContentType.Value;
             return true;
         }
         if (CheckLine(0, _size - 1, 1, -1))
         {
-            cellContentType = GetCell(0, _size - 1).ContentType;
+            cellContentType = GetCell(0, _size - 1).ContentType.Value;
             return true;
         }
 
@@ -79,7 +89,7 @@ public class GameBoard : IGameBoard
     private bool CheckLine(int startRow, int startColumn, int rowStep, int columnStep)
     {
         var firstCell = _cells.FirstOrDefault(c => c.Row == startRow && c.Column == startColumn);
-        if (firstCell.ContentType == CellContentType.Empty)
+        if (firstCell.ContentType.Value == CellContentType.Empty)
             return false;
 
         for (int i = 1; i < _size; i++)
@@ -88,11 +98,11 @@ public class GameBoard : IGameBoard
             int col = startColumn + i * columnStep;
 
             var cell = _cells.FirstOrDefault(c => c.Row == row && c.Column == col);
-            if (cell.ContentType != firstCell.ContentType)
+            if (cell.ContentType.Value != firstCell.ContentType.Value)
                 return false;
         }
 
-        return true; // Все 3 ячейки совпадают
+        return true;
     }
 
     private BoardCell GetCell(int row, int column)

@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Net.Mime;
 using UniRx;
 
 public class Game
 {
     public event Action Started;
-    public event Action<bool> Finished;
+    public event Action<WinnerType> Finished;
 
     public IObservable<bool> IsPlayerTurn => _isPlayerTurn;
     private ReactiveProperty<bool> _isPlayerTurn = new();
@@ -12,7 +15,7 @@ public class Game
     private readonly GameBoard _gameBoard;
 
     private GameParameters _gameParameters;
-    private int _currentPlayerNumber;
+    private string _currentPlayerId;
     private bool _finished;
     
     public Game(GameBoard gameBoard)
@@ -31,68 +34,93 @@ public class Game
         if (gameParameters.PlayerContentType == gameParameters.OpponentContentType)
             throw new ArgumentException($"Метки одинаковые у двух игроков. У обоих {gameParameters.PlayerContentType}.");
 
+        _gameBoard.Clear();
         _finished = false;
         _gameParameters = gameParameters;
-        _currentPlayerNumber = _gameParameters.PlayerContentType == CellContentType.Cross ?
-            _gameParameters.PlayerNumber : _gameParameters.OpponentNumber;
-        _isPlayerTurn.Value = _currentPlayerNumber == _gameParameters.PlayerNumber;
+        _currentPlayerId = _gameParameters.PlayerContentType == CellContentType.Cross ?
+            _gameParameters.PlayerId : _gameParameters.OpponentId;
+        _isPlayerTurn.Value = _currentPlayerId == _gameParameters.PlayerId;
 
         Started?.Invoke();
+        UnityEngine.Debug.Log("Стартовали");
     }
 
     public void Restart()
     {
         var gameParameters = new GameParameters(
-            _gameParameters.PlayerNumber,
+            _gameParameters.PlayerId,
             playerContentType: _gameParameters.OpponentContentType,
-            _gameParameters.OpponentNumber,
+            _gameParameters.OpponentId,
             opponentContentType: _gameParameters.PlayerContentType);
         
         Start(gameParameters);
     }
 
-    public bool MakeMove(int row, int column, int playerNumber)
+    public bool MakeMove(int row, int column, string playerId)
     {
-        if (playerNumber != _currentPlayerNumber)
+        UnityEngine.Debug.Log($"Ход {row} {column} {playerId}");
+        if (_finished)
+            return false;
+
+        if (playerId != _currentPlayerId)
             return false;
 
         if (!_gameBoard.IsEmpty(row, column))
             return false;
 
-        var contentType = GetCurrentContent();
+        var contentType = GetCurrentPlayerContentType();
 
         _gameBoard.SetContent(row, column, contentType);
 
         if (_gameBoard.IsFullLine(out var cellContentType))
         {
-            Finished?.Invoke(_isPlayerTurn.Value);
             _finished = true;
+            var winner = _isPlayerTurn.Value == true ? WinnerType.Player : WinnerType.Opponent;
+            Finished?.Invoke(winner);
+        }
+        else if (!_gameBoard.HasEmpty())
+        {
+            _finished = true;
+            Finished?.Invoke(WinnerType.Draw);
         }
         else
         {
-            _currentPlayerNumber = GetNextPlayer();
-            _isPlayerTurn.Value = _currentPlayerNumber == _gameParameters.PlayerNumber;
+            _currentPlayerId = GetNextPlayer();
+            _isPlayerTurn.Value = _currentPlayerId == _gameParameters.PlayerId;
         }
 
         return true;
     }
 
-    private int GetNextPlayer()
+    public bool IsMyMark(CellContentType cellContentType)
     {
-        if (_currentPlayerNumber == _gameParameters.PlayerNumber)
-            return _gameParameters.OpponentNumber;
-        else
-            return _gameParameters.PlayerNumber;
+        return cellContentType == _gameParameters.PlayerContentType;
     }
 
-    private CellContentType GetCurrentContent()
+    private string GetNextPlayer()
     {
-        if (_currentPlayerNumber == _gameParameters.PlayerNumber)
+        if (_currentPlayerId == _gameParameters.PlayerId)
+            return _gameParameters.OpponentId;
+        else
+            return _gameParameters.PlayerId;
+    }
+
+    private CellContentType GetCurrentPlayerContentType()
+    {
+        if (_currentPlayerId == _gameParameters.PlayerId)
             return _gameParameters.PlayerContentType;
-        else if (_currentPlayerNumber == _gameParameters.OpponentNumber)
+        else if (_currentPlayerId == _gameParameters.OpponentId)
             return _gameParameters.OpponentContentType;
         else
-            throw new Exception($"Неопознанный игрок номер {_currentPlayerNumber} пытается сделать ход.");
+            throw new Exception($"Неопознанный игрок с id {_currentPlayerId} пытается сделать ход.");
     }
+}
+
+public enum WinnerType
+{
+    None = 0,
+    Player = 1,
+    Opponent = 2,
+    Draw = 3
 }
 

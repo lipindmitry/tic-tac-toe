@@ -1,6 +1,8 @@
-﻿public interface IBoardCell
+﻿using UniRx;
+
+public interface IBoardCell
 {
     int Column { get; }
-    CellContentType ContentType { get; }
     int Row { get; }
+    IReadOnlyReactiveProperty<CellContentType> ContentType { get; }
 }

@@ -1,18 +1,18 @@
 ﻿public class GameParameters
 {
-    public int PlayerNumber { get; }
+    public string PlayerId { get; }
     public CellContentType PlayerContentType { get; }
-    public int OpponentNumber { get; }
+    public string OpponentId { get; }
     public CellContentType OpponentContentType { get; }
 
-    public GameParameters(int playerNumber,
+    public GameParameters(string playerId,
         CellContentType playerContentType,
-        int opponentNumber,
+        string opponentId,
         CellContentType opponentContentType)
     {
-        PlayerNumber = playerNumber;
+        PlayerId = playerId;
         PlayerContentType = playerContentType;
-        OpponentNumber = opponentNumber;
+        OpponentId = opponentId;
         OpponentContentType = opponentContentType;
     }
 }
