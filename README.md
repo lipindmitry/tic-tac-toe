@@ -1,7 +1,8 @@
 # Tic Tac Toe
 тестовое задание : https://docs.google.com/document/d/19W7mZq51gZLAmcSCANrBz8aSoQP85vns/edit?tab=t.0
 
-#Инструкция по запуску
+<pre>
+<b>Инструкция по запуску</b>
 -скачать архив "Tic Tac Toe.rar" из папки "game_build";
 -разархивировать архив;
 -запустить исполняемый файл "Tic Tac Toe.exe";
@@ -18,3 +19,4 @@
 Сетевой фрэймворк - PUN2
 DI контейнер - VContainer
 Реактивное взаимодействие - UniRx
+</pre>
