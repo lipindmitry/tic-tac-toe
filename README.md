@@ -27,3 +27,4 @@
 DI контейнер - VContainer
 Реактивное взаимодействие - UniRx
 </pre>
+<img width="1457" height="787" alt="image" src="https://github.com/user-attachments/assets/eaf39bba-5f12-47a2-b7e2-d315e2f49be0" />
